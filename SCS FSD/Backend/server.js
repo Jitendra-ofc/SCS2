@@ -8,7 +8,9 @@ dotenv.config();
 
 const app = express();
 
-// Connect to MongoDB
+// ==========================================
+// CONNECT TO MONGODB
+// ==========================================
 connectDB();
 
 // ==========================================
@@ -20,22 +22,27 @@ const allowedOrigins = [
   "http://127.0.0.1:5500"
 ];
 
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests without origin, such as Postman
+    // Allow requests without an Origin header, such as Postman
     if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
+      return callback(null, true);
     }
-  },
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-}));
 
-// Explicitly handle preflight OPTIONS requests
-app.options("*", cors());
+    return callback(new Error("Not allowed by CORS"));
+  },
+
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+
+  allowedHeaders: ["Content-Type", "Authorization"],
+
+  credentials: true,
+
+  optionsSuccessStatus: 200
+};
+
+// Apply CORS middleware to all routes
+app.use(cors(corsOptions));
 
 // ==========================================
 // BODY MIDDLEWARE
@@ -43,7 +50,9 @@ app.options("*", cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Root
+// ==========================================
+// ROOT ROUTE
+// ==========================================
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
@@ -51,7 +60,9 @@ app.get("/", (req, res) => {
   });
 });
 
-// Health check
+// ==========================================
+// HEALTH CHECK
+// ==========================================
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -66,7 +77,9 @@ const authRoutes = require("./routes/authRoutes");
 
 app.use("/api/auth", authRoutes);
 
-// 404
+// ==========================================
+// 404 ROUTE
+// ==========================================
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -74,7 +87,9 @@ app.use((req, res) => {
   });
 });
 
-// Server
+// ==========================================
+// SERVER
+// ==========================================
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
