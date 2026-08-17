@@ -4,36 +4,52 @@ const dotenv = require("dotenv");
 
 const connectDB = require("./config/db");
 
+// Load environment variables
 dotenv.config();
 
+// Connect to MongoDB
 connectDB();
 
 const app = express();
 
-// CORS configuration
-app.use(cors({
+// ================================
+// CORS CONFIGURATION
+// ================================
+const corsOptions = {
   origin: [
     "https://scs-2-kappa.vercel.app",
-    "http://localhost:5500",
+    "http://localhost:3000",
     "http://127.0.0.1:5500"
   ],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+};
 
-// Middleware
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options(/.*/, cors(corsOptions));
+
+// ================================
+// MIDDLEWARE
+// ================================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Root route
+// ================================
+// ROOT ROUTE
+// ================================
 app.get("/", (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
     message: "Smart Complaint System API is running"
   });
 });
 
-// Health check route
+// ================================
+// HEALTH CHECK
+// ================================
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -41,18 +57,19 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-/*
-  KEEP YOUR EXISTING ROUTES HERE
+// ================================
+// ROUTES
+// ================================
 
-  Example:
-  const authRoutes = require("./routes/authRoutes");
-  const complaintRoutes = require("./routes/complaintRoutes");
+const authRoutes = require("./routes/authRoutes");
+// const complaintRoutes = require("./routes/complaintRoutes");
 
-  app.use("/api/auth", authRoutes);
-  app.use("/api/complaints", complaintRoutes);
-*/
+app.use("/api/auth", authRoutes);
+// app.use("/api/complaints", complaintRoutes);
 
-// 404 handler
+// ================================
+// 404 HANDLER
+// ================================
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -60,6 +77,9 @@ app.use((req, res) => {
   });
 });
 
+// ================================
+// SERVER
+// ================================
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
