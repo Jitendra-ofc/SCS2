@@ -1,6 +1,27 @@
 const BASE_URL = "https://scs-backend-3xx1.onrender.com/api";
 
-// ================= REGISTER =================
+// ===============================
+// HELPER FUNCTION
+// ===============================
+
+async function getResponseData(response) {
+    const contentType = response.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+        return await response.json();
+    }
+
+    const text = await response.text();
+
+    return {
+        message: text || `Server returned status ${response.status}`
+    };
+}
+
+
+// ===============================
+// REGISTER
+// ===============================
 
 const registerForm = document.getElementById("registerForm");
 
@@ -10,21 +31,44 @@ if (registerForm) {
 
         e.preventDefault();
 
-        const fullName = document.getElementById("fullName").value;
-        const email = document.getElementById("email").value;
-        const password = document.getElementById("password").value;
+        const fullNameElement = document.getElementById("fullName");
+        const emailElement = document.getElementById("email");
+        const passwordElement = document.getElementById("password");
+
+        const fullName = fullNameElement
+            ? fullNameElement.value.trim()
+            : "";
+
+        const email = emailElement
+            ? emailElement.value.trim()
+            : "";
+
+        const password = passwordElement
+            ? passwordElement.value
+            : "";
+
+        if (!fullName || !email || !password) {
+
+            Swal.fire({
+                icon: "warning",
+                title: "Missing Information",
+                text: "Please fill in all fields."
+            });
+
+            return;
+        }
 
         try {
 
             const response = await fetch(`${BASE_URL}/auth/register`, {
 
-                method:"POST",
+                method: "POST",
 
-                headers:{
-                    "Content-Type":"application/json"
+                headers: {
+                    "Content-Type": "application/json"
                 },
 
-                body:JSON.stringify({
+                body: JSON.stringify({
                     fullName,
                     email,
                     password
@@ -32,57 +76,55 @@ if (registerForm) {
 
             });
 
-            const data=await response.json();
+            const data = await getResponseData(response);
 
-            if(response.ok){
-
-                Swal.fire({
-
-                    icon:"success",
-
-                    title:"Registration Successful",
-
-                    text:data.message,
-
-                    timer:1800,
-
-                    showConfirmButton:false
-
-                });
-
-                setTimeout(()=>{
-
-                    window.location.href="login.html";
-
-                },1800);
-
-            }
-
-            else{
+            if (response.ok) {
 
                 Swal.fire({
 
-                    icon:"error",
+                    icon: "success",
 
-                    title:"Registration Failed",
+                    title: "Registration Successful",
 
-                    text:data.message
+                    text: data.message || "Your account has been created.",
+
+                    timer: 1800,
+
+                    showConfirmButton: false
+
+                });
+
+                setTimeout(() => {
+
+                    window.location.href = "login.html";
+
+                }, 1800);
+
+            } else {
+
+                Swal.fire({
+
+                    icon: "error",
+
+                    title: "Registration Failed",
+
+                    text: data.message || "Unable to register. Please try again."
 
                 });
 
             }
 
-        }
+        } catch (error) {
 
-        catch(error){
+            console.error("Registration error:", error);
 
             Swal.fire({
 
-                icon:"error",
+                icon: "error",
 
-                title:"Server Error",
+                title: "Server Error",
 
-                text:error.message
+                text: "Unable to connect to the server. Please try again."
 
             });
 
@@ -93,196 +135,281 @@ if (registerForm) {
 }
 
 
-// ================= LOGIN =================
+// ===============================
+// USER LOGIN
+// ===============================
 
-const loginForm=document.getElementById("loginForm");
+const loginForm = document.getElementById("loginForm");
 
-if(loginForm){
+if (loginForm) {
 
-loginForm.addEventListener("submit",async(e)=>{
+    loginForm.addEventListener("submit", async (e) => {
 
-e.preventDefault();
+        e.preventDefault();
 
-const email=document.getElementById("email").value;
+        const emailElement = document.getElementById("email");
+        const passwordElement = document.getElementById("password");
 
-const password=document.getElementById("password").value;
+        const email = emailElement
+            ? emailElement.value.trim()
+            : "";
 
-try{
+        const password = passwordElement
+            ? passwordElement.value
+            : "";
 
-const response=await fetch(`${BASE_URL}/auth/login`,{
+        if (!email || !password) {
 
-method:"POST",
+            Swal.fire({
+                icon: "warning",
+                title: "Missing Information",
+                text: "Please enter your email and password."
+            });
 
-headers:{
+            return;
+        }
 
-"Content-Type":"application/json"
+        try {
 
-},
+            const response = await fetch(`${BASE_URL}/auth/login`, {
 
-body:JSON.stringify({
+                method: "POST",
 
-email,
+                headers: {
+                    "Content-Type": "application/json"
+                },
 
-password
+                body: JSON.stringify({
+                    email,
+                    password
+                })
 
-})
+            });
 
-});
+            const data = await getResponseData(response);
 
-const data=await response.json();
+            if (response.ok) {
 
-if(response.ok){
+                if (!data.token) {
 
-localStorage.setItem("token",data.token);
+                    Swal.fire({
+                        icon: "error",
+                        title: "Login Error",
+                        text: "Server did not return an authentication token."
+                    });
 
-localStorage.setItem("user",JSON.stringify(data.user));
+                    return;
+                }
 
-Swal.fire({
+                localStorage.setItem("token", data.token);
 
-icon:"success",
+                if (data.user) {
+                    localStorage.setItem(
+                        "user",
+                        JSON.stringify(data.user)
+                    );
+                }
 
-title:"Login Successful",
+                Swal.fire({
 
-timer:1200,
+                    icon: "success",
 
-showConfirmButton:false
+                    title: "Login Successful",
 
-});
+                    timer: 1200,
 
-setTimeout(()=>{
+                    showConfirmButton: false
 
-window.location.href="dashboard.html";
+                });
 
-},1200);
+                setTimeout(() => {
+
+                    window.location.href = "dashboard.html";
+
+                }, 1200);
+
+            } else {
+
+                Swal.fire({
+
+                    icon: "error",
+
+                    title: "Login Failed",
+
+                    text: data.message || "Invalid email or password."
+
+                });
+
+            }
+
+        } catch (error) {
+
+            console.error("Login error:", error);
+
+            Swal.fire({
+
+                icon: "error",
+
+                title: "Server Error",
+
+                text: "Unable to connect to the backend server."
+
+            });
+
+        }
+
+    });
 
 }
 
-else{
 
-Swal.fire({
+// ===============================
+// ADMIN LOGIN
+// ===============================
 
-icon:"error",
+const adminLoginForm = document.getElementById("adminLoginForm");
 
-title:"Login Failed",
+if (adminLoginForm) {
 
-text:data.message
+    adminLoginForm.addEventListener("submit", async (e) => {
 
-});
+        e.preventDefault();
 
-}
+        const emailElement = document.getElementById("email");
+        const passwordElement = document.getElementById("password");
 
-}
+        const email = emailElement
+            ? emailElement.value.trim()
+            : "";
 
-catch(error){
+        const password = passwordElement
+            ? passwordElement.value
+            : "";
 
-Swal.fire({
+        if (!email || !password) {
 
-icon:"error",
+            Swal.fire({
+                icon: "warning",
+                title: "Missing Information",
+                text: "Please enter your email and password."
+            });
 
-title:"Server Error",
+            return;
+        }
 
-text:error.message
+        try {
 
-});
+            const response = await fetch(`${BASE_URL}/auth/login`, {
 
-}
+                method: "POST",
 
-});
+                headers: {
+                    "Content-Type": "application/json"
+                },
 
-}
+                body: JSON.stringify({
+                    email,
+                    password
+                })
 
+            });
 
+            const data = await getResponseData(response);
 
-// ================= ADMIN LOGIN =================
+            if (response.ok) {
 
-const adminLoginForm=document.getElementById("adminLoginForm");
+                if (!data.user) {
 
-if(adminLoginForm){
+                    Swal.fire({
+                        icon: "error",
+                        title: "Login Error",
+                        text: "Server did not return user information."
+                    });
 
-adminLoginForm.addEventListener("submit",async(e)=>{
+                    return;
+                }
 
-e.preventDefault();
+                if (data.user.role !== "admin") {
 
-const email=document.getElementById("email").value;
+                    Swal.fire({
 
-const password=document.getElementById("password").value;
+                        icon: "error",
 
-const response=await fetch(`${BASE_URL}/auth/login`,{
+                        title: "Access Denied",
 
-method:"POST",
+                        text: "This account is not an administrator."
 
-headers:{
+                    });
 
-"Content-Type":"application/json"
+                    return;
+                }
 
-},
+                if (!data.token) {
 
-body:JSON.stringify({
+                    Swal.fire({
+                        icon: "error",
+                        title: "Login Error",
+                        text: "Server did not return an authentication token."
+                    });
 
-email,
+                    return;
+                }
 
-password
+                localStorage.setItem("token", data.token);
 
-})
+                localStorage.setItem(
+                    "user",
+                    JSON.stringify(data.user)
+                );
 
-});
+                Swal.fire({
 
-const data=await response.json();
+                    icon: "success",
 
-if(response.ok){
+                    title: "Welcome Admin",
 
-if(data.user.role!=="admin"){
+                    timer: 1200,
 
-return Swal.fire({
+                    showConfirmButton: false
 
-icon:"error",
+                });
 
-title:"Access Denied",
+                setTimeout(() => {
 
-text:"This account is not an administrator."
+                    window.location.href = "admin-dashboard.html";
 
-});
+                }, 1200);
 
-}
+            } else {
 
-localStorage.setItem("token",data.token);
+                Swal.fire({
 
-localStorage.setItem("user",JSON.stringify(data.user));
+                    icon: "error",
 
-Swal.fire({
+                    title: "Login Failed",
 
-icon:"success",
+                    text: data.message || "Invalid admin credentials."
 
-title:"Welcome Admin",
+                });
 
-timer:1200,
+            }
 
-showConfirmButton:false
+        } catch (error) {
 
-});
+            console.error("Admin login error:", error);
 
-setTimeout(()=>{
+            Swal.fire({
 
-window.location.href="admin-dashboard.html";
+                icon: "error",
 
-},1200);
+                title: "Server Error",
 
-}
+                text: "Unable to connect to the backend server."
 
-else{
+            });
 
-Swal.fire({
+        }
 
-icon:"error",
-
-title:"Login Failed",
-
-text:data.message
-
-});
-
-}
-
-});
+    });
 
 }
