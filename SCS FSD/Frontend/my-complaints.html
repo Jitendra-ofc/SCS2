@@ -131,7 +131,7 @@ async function loadComplaints(){
 
     try{
 
-        const res = await fetch("http://localhost:5000/api/complaints/my",{
+        const res = await fetch("BASE_URL/api/complaints/my",{
 
             headers:{
                 Authorization:"Bearer "+token

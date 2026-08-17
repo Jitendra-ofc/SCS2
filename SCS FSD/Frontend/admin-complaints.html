@@ -234,7 +234,7 @@ let complaints=[];
 
 async function loadComplaints(){
 
-const res=await fetch("http://localhost:5000/api/complaints",{
+const res=await fetch("BASE_URL/api/complaints",{
 
 headers:{
 Authorization:"Bearer "+token
@@ -340,7 +340,7 @@ document.getElementById("complaintsTable").innerHTML=rows;
 
 async function updateStatus(id,status){
 
-await fetch(`http://localhost:5000/api/complaints/${id}`,{
+await fetch(`BASE_URL/api/complaints/${id}`,{
 
 method:"PUT",
 

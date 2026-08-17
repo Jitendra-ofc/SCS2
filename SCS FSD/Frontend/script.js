@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:5000/api";
+const BASE_URL = "https://scs-backend-3xx1.onrender.com/api";
 
 // ================= REGISTER =================
 
@@ -16,7 +16,7 @@ if (registerForm) {
 
         try {
 
-            const response = await fetch(`${BASE_URL}/auth/register`,{
+            const response = await fetch(`${BASE_URL}/auth/register`, {
 
                 method:"POST",
 
