@@ -4,72 +4,45 @@ const dotenv = require("dotenv");
 
 const connectDB = require("./config/db");
 
-// Load environment variables
 dotenv.config();
-
-// Connect to MongoDB
-connectDB();
 
 const app = express();
 
-// ================================
-// CORS CONFIGURATION
-// ================================
-const corsOptions = {
-  origin: [
-    "https://scs-2-kappa.vercel.app",
-    "http://localhost:3000",
-    "http://127.0.0.1:5500"
-  ],
+// Connect MongoDB
+connectDB();
+
+// CORS - MUST BE BEFORE ROUTES
+app.use(cors({
+  origin: "https://scs-2-kappa.vercel.app",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-};
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
-app.use(cors(corsOptions));
-
-// Handle preflight requests
-app.options(/.*/, cors(corsOptions));
-
-// ================================
-// MIDDLEWARE
-// ================================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ================================
-// ROOT ROUTE
-// ================================
+// Test route
 app.get("/", (req, res) => {
-  res.status(200).json({
+  res.json({
     success: true,
     message: "Smart Complaint System API is running"
   });
 });
 
-// ================================
-// HEALTH CHECK
-// ================================
+// Health route
 app.get("/api/health", (req, res) => {
-  res.status(200).json({
+  res.json({
     success: true,
     message: "API is healthy"
   });
 });
 
-// ================================
-// ROUTES
-// ================================
-
+// Routes
 const authRoutes = require("./routes/authRoutes");
-// const complaintRoutes = require("./routes/complaintRoutes");
 
 app.use("/api/auth", authRoutes);
-// app.use("/api/complaints", complaintRoutes);
 
-// ================================
-// 404 HANDLER
-// ================================
+// 404
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -77,9 +50,6 @@ app.use((req, res) => {
   });
 });
 
-// ================================
-// SERVER
-// ================================
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
