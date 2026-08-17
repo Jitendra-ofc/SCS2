@@ -8,36 +8,60 @@ dotenv.config();
 
 const app = express();
 
-// Connect MongoDB
+// Connect to MongoDB
 connectDB();
 
-// CORS - MUST BE BEFORE ROUTES
+// ==========================================
+// CORS CONFIGURATION
+// ==========================================
+const allowedOrigins = [
+  "https://scs-2-kappa.vercel.app",
+  "http://localhost:3000",
+  "http://127.0.0.1:5500"
+];
+
 app.use(cors({
-  origin: "https://scs-2-kappa.vercel.app",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  origin: function (origin, callback) {
+    // Allow requests without origin, such as Postman
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
 }));
 
+// Explicitly handle preflight OPTIONS requests
+app.options("*", cors());
+
+// ==========================================
+// BODY MIDDLEWARE
+// ==========================================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Test route
+// Root
 app.get("/", (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
     message: "Smart Complaint System API is running"
   });
 });
 
-// Health route
+// Health check
 app.get("/api/health", (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
     message: "API is healthy"
   });
 });
 
-// Routes
+// ==========================================
+// ROUTES
+// ==========================================
 const authRoutes = require("./routes/authRoutes");
 
 app.use("/api/auth", authRoutes);
@@ -50,6 +74,7 @@ app.use((req, res) => {
   });
 });
 
+// Server
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
