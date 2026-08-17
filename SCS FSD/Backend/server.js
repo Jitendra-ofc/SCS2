@@ -1,47 +1,61 @@
-require("dotenv").config();
-
 const express = require("express");
 const cors = require("cors");
+const dotenv = require("dotenv");
 
 const connectDB = require("./config/db");
 
-const authRoutes = require("./routes/authRoutes");
-const complaintRoutes = require("./routes/complaintRoutes");
+// Load environment variables
+dotenv.config();
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
-
-// Connect Database
-connectDB();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// ROOT ROUTE
+// Root route
 app.get("/", (req, res) => {
-    res.status(200).json({
-        success: true,
-        message: "Smart Complaint System API is running"
-    });
+  res.json({
+    success: true,
+    message: "Smart Complaint System API is running"
+  });
 });
 
-// HEALTH ROUTE
+// Health check route
 app.get("/api/health", (req, res) => {
-    res.status(200).json({
-        success: true,
-        message: "API is healthy"
-    });
+  res.status(200).json({
+    success: true,
+    message: "API is healthy"
+  });
 });
 
-// AUTH ROUTES
-app.use("/api/auth", authRoutes);
+/*
+  ADD YOUR EXISTING ROUTES BELOW
 
-// COMPLAINT ROUTES
-app.use("/api/complaints", complaintRoutes);
+  Example:
 
-// Start Server
-const PORT = process.env.PORT || 5000;
+  const authRoutes = require("./routes/authRoutes");
+  const complaintRoutes = require("./routes/complaintRoutes");
+
+  app.use("/api/auth", authRoutes);
+  app.use("/api/complaints", complaintRoutes);
+*/
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found"
+  });
+});
+
+// Server port
+const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
