@@ -4,16 +4,24 @@ const dotenv = require("dotenv");
 
 const connectDB = require("./config/db");
 
-// Load environment variables
 dotenv.config();
 
-// Connect to MongoDB
 connectDB();
 
 const app = express();
 
+// CORS configuration
+app.use(cors({
+  origin: [
+    "https://scs-2-kappa.vercel.app",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 // Middleware
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -34,10 +42,9 @@ app.get("/api/health", (req, res) => {
 });
 
 /*
-  ADD YOUR EXISTING ROUTES BELOW
+  KEEP YOUR EXISTING ROUTES HERE
 
   Example:
-
   const authRoutes = require("./routes/authRoutes");
   const complaintRoutes = require("./routes/complaintRoutes");
 
@@ -53,7 +60,6 @@ app.use((req, res) => {
   });
 });
 
-// Server port
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
